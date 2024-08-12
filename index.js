@@ -1,6 +1,6 @@
 const express = require("express");
 const productRoutes = require("./src/routes/productsRoute");
-
+const userRoutes = require("./src/routes/userRoutes");
 const connectDB = require("./src/config/db");
 
 const cors = require("cors");
@@ -10,17 +10,18 @@ const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: ["http://localhost:5173", "http://localhost:4173"],
   })
 );
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 
 connectDB();
 
 // Mpunt the product routes on "/products"
 
 app.use("/products", productRoutes);
+app.use("/users", userRoutes);
 
 app.get("/", (req, res) => {
   res.send({

@@ -14,40 +14,8 @@ const getSingleProduct = async (req, res) => {
   }
 };
 
-// get products based on  tag or age of construction
-
-// {
-//     id: "1",
-//     images: [
-//       "https://images.unsplash.com/photo-1558036117-15d82a90b9b1?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-//       "https://images.unsplash.com/photo-1560184897-ae75f418493e?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-//       "https://images.unsplash.com/photo-1560185127-6ed189bf02f4?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-//     ],
-//     beds: 3,
-//     bath: 2,
-//     type: "Fully Furnished",
-//     carpetArea: "2000 sqf",
-//     floor: "2nd floor",
-//     transactionType: "Ready to move",
-//     lift: 1,
-//     facing: "North-East",
-//     additionalRoom: {
-//       servent: 1,
-//       guest: 1,
-//     },
-//     ageOfConstruction: "New",
-//     tag: "Popular",
-//     name: "Luxury Apartment",
-//     place: {
-//       area: "Banani",
-//       city: "Dhaka",
-//     },
-//     price: 150,
-//     propertyType: "Apartment",
-//   },
-
 const getProductsByTagOrAge = async (req, res) => {
-  console.log(req.query);
+
   const tagOrAge = req.query.tagOrAge;
   if (!tagOrAge) {
     return res.status(400).send({ message: "tagOrAge query parameter is required" });
@@ -55,7 +23,7 @@ const getProductsByTagOrAge = async (req, res) => {
 
   if (tagOrAge === "New") {
     // send 10 products max
-    const products = await Product.find({ tag: "New" }).limit(10);
+    const products = await Product.find({ ageOfConstruction: "New" }).limit(10);
     return res.send({ data: products, message: "Products retrieved successfully", total: products.length });
   }
 
@@ -79,7 +47,7 @@ const getProductsByTagOrAge = async (req, res) => {
 
 const getSearchProducts = async (req, res) => {
   try {
-    const { name, location, propertyType, budget } = req?.query;
+    const { name, location, propertyType, budget } = req.query;
 
     const query = {
       name: new RegExp(name, "i"), // Case-insensitive match
@@ -88,7 +56,23 @@ const getSearchProducts = async (req, res) => {
       price: { $gte: Number(budget) }, // Match properties with price >= budget
     };
 
-    const products = await Product.find(query);
+    let products = await Product.find(query);
+
+    // If no products are found, try the alternative property type
+    if (products.length === 0) {
+      const alternativeType = propertyType === "Apartment" ? "Villa" : "Apartment";
+      products = await Product.find({
+        name: new RegExp(name, "i"),
+        "place.city": new RegExp(location, "i"),
+        propertyType: alternativeType,
+        price: { $gte: Number(budget) },
+      });
+    }
+
+    if (products.length === 0) {
+      delete query["place.city"];
+      products = await Product.find(query);
+    }
 
     res.status(200).send({
       data: products,
