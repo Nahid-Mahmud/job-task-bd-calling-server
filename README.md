@@ -37,3 +37,23 @@
 **Example:**
 
 - `/products/search?name=Green%20Villa&location=Dhaka&propertyType=Villa&budget=180`
+
+## Users Route
+
+### Create User
+
+**Endpoint:** `api/users/`
+
+**Method:** `POST`
+
+### Update User
+
+**Endpoint:** `api/user/:email`
+
+**Method:** `PUT`
+
+### Delete User
+
+**Endpoint:** `api/user/:email`
+
+**Method:** `DELETE`
